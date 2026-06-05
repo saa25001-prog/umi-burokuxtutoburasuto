@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>オーシャン・ブロック・ブラスト (Ocean Block Blast)</title>
+    <!-- Tailwind CSS for utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap');
+        
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background: radial-gradient(circle at center, #0a1e3f 0%, #020813 100%);
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        /* 泡のアニメーション */
+        .bubble {
+            position: absolute;
+            bottom: -50px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatUp 8s infinite ease-in-out;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) translateX(0) scale(1);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-110vh) translateX(50px) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        /* 3D風の海中ボタン */
+        .sea-btn {
+            background: linear-gradient(135deg, #00d2ff 0%, #0066ff 100%);
+            box-shadow: 0 4px 15px rgba(0, 198, 255, 0.4), inset 0 2px 5px rgba(255, 255, 255, 0.5);
+            transition: all 0.2s ease;
+        }
+        .sea-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 198, 255, 0.6), inset 0 2px 8px rgba(255, 255, 255, 0.6);
+        }
+        .sea-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="w-full h-screen flex flex-col items-center justify-center text-white relative px-4 select-none">
+
+    <!-- 背景の泡効果用コンテナ -->
+    <div id="bubbles-container" class="absolute inset-0 overflow-hidden pointer-events-none z-0"></div>
+
+    <!-- メインコンテンツ -->
+    <div class="relative z-10 w-full max-w-md flex flex-col items-center h-full max-h-[900px] justify-between py-4">
+        
+        <!-- ヘッダー / スコアボード -->
+        <div class="w-full flex justify-between items-center bg-blue-950/50 backdrop-blur-md rounded-2xl p-4 border border-blue-500/30 shadow-lg">
+            <div>
+                <h1 class="text-xl font-extrabold text-cyan-300 tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-water-ladder text-cyan-400"></i> Ocean Blast
+                </h1>
+                <p class="text-xs text-blue-300/80">深海のパズルゲーム</p>
+            </div>
+            <div class="flex gap-4">
+                <div class="text-right">
+                    <p class="text-xs text-cyan-400 font-bold uppercase tracking-widest">Score</p>
+                    <p id="score" class="text-2xl font-black text-white">0</p>
+                </div>
+                <div class="text-right border-l border-blue-800 pl-4">
+                    <p class="text-xs text-amber-400 font-bold uppercase tracking-widest">Best</p>
+                    <p id="high-score" class="text-2xl font-black text-amber-300">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- メインゲームキャンバスエリア -->
+        <div class="relative my-4 w-full aspect-square bg-blue-950/30 rounded-2xl border-2 border-blue-400/40 shadow-inner flex items-center justify-center overflow-hidden">
+            <canvas id="game-canvas" class="w-full h-full max-w-full max-h-full block cursor-pointer"></canvas>
+            
+            <!-- ゲーム開始・ゲームオーバー等オーバーレイ -->
+            <div id="overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center transition-all duration-300 z-20">
+                <div class="mb-4 text-cyan-300 text-6xl animate-bounce">
+                    <i id="overlay-icon" class="fa-solid fa-anchor"></i>
+                </div>
+                <h2 id="overlay-title" class="text-3xl font-black text-white mb-2">Ocean Block Blast</h2>
+                <p id="overlay-desc" class="text-blue-200/90 mb-6 max-w-xs">10x10の海にブロックを敷き詰め、縦か横の列を揃えて消し去ろう！</p>
+                <button id="start-btn" class="sea-btn text-white text-lg font-extrabold px-8 py-3 rounded-full uppercase tracking-wider flex items-center gap-2">
+                    <span>ゲームスタート</span> <i class="fa-solid fa-play"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 選択可能な3つの持ち手ブロックエリア -->
+        <div class="w-full bg-blue-950/40 backdrop-blur-sm rounded-2xl p-4 border border-blue-500/20 shadow-lg flex flex-col items-center gap-3">
+            <p class="text-xs text-blue-300 font-bold tracking-wider uppercase">選択ブロック</p>
+            <div class="w-full flex justify-around items-center h-28 relative">
+                <canvas id="block-canvas-0" class="w-24 h-24 bg-blue-950/20 rounded-xl border border-blue-500/10 hover:border-cyan-400/40 transition-colors cursor-grab active:cursor-grabbing"></canvas>
+                <canvas id="block-canvas-1" class="w-24 h-24 bg-blue-950/20 rounded-xl border border-blue-500/10 hover:border-cyan-400/40 transition-colors cursor-grab active:cursor-grabbing"></canvas>
+                <canvas id="block-canvas-2" class="w-24 h-24 bg-blue-950/20 rounded-xl border border-blue-500/10 hover:border-cyan-400/40 transition-colors cursor-grab active:cursor-grabbing"></canvas>
+            </div>
+        </div>
+
+        <!-- フッターコントロール -->
+        <div class="w-full flex justify-between items-center text-xs text-blue-400/60 mt-2 px-1">
+            <span>© 2026 Ocean Blast. Developed dynamic Canvas.</span>
+            <button id="restart-btn" class="hover:text-cyan-300 flex items-center gap-1 transition-colors text-blue-300 font-bold">
+                <i class="fa-solid fa-rotate-right"></i> リセット
+            </button>
+        </div>
+    </div>
+
+    <!-- カスタム通知用メッセージボックス -->
+    <div id="toast" class="fixed bottom-8 bg-blue-600/90 text-white font-bold py-3 px-6 rounded-full shadow-2xl border border-cyan-300/40 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 z-50 text-center flex items-center gap-2">
+        <i class="fa-solid fa-wand-magic-sparkles text-yellow-300"></i>
+        <span id="toast-text">ハイスコア達成！</span>
+    </div>
+
+    <script>
+        // --- ゲーム定数 & 色彩設計（深海テーマ） ---
+        const GRID_SIZE = 10;
+        const GRID_PADDING = 4;
+        
+        // 海のカラーパレット
+        const COLORS = {
+            gridBg: '#09152b',        // グリッド背景
+            gridLine: '#142a4d',      // グリッド格子線
+            cellEmpty: '#0c1b36',     // 空セル
+            shadow: 'rgba(0, 0, 0, 0.4)',
+            // ブロック色の光輝くグラデーション（[開始色, 終了色, 真珠ハイライト色, パーティクル色]）
+            blocks: [
+                ['#00f2fe', '#4facfe', '#ffffff', '#00f2fe'], // シアン水流
+                ['#30cfd0', '#330867', '#e2d9fc', '#30cfd0'], // 深海バイオレット
+                ['#ff0844', '#ffb199', '#ffffff', '#ff0844'], // サンゴピンク
+                ['#f12711', '#f5af19', '#fff3d1', '#f5af19'], // 黄金の真珠
+                ['#9be15d', '#00e3ae', '#ffffff', '#00e3ae'], // エメラルド藻
+                ['#a1c4fd', '#c2e9fb', '#ffffff', '#c2e9fb'], // 浅瀬の水滴
+                ['#f093fb', '#f5576c', '#fff0f5', '#f5576c']  // 幻惑のクラゲ
+            ]
+        };
+
+        // ブロック形状の定義 (0 = 空白, 1以上 = ブロックの色インデックス+1)
+        const SHAPES = [
+            // 1x1
+            [[1]],
+            // 2x2 正方形
+            [[2, 2], [2, 2]],
+            // 3x3 正方形
+            [[3, 3, 3], [3, 3, 3], [3, 3, 3]],
+            // 直線 (横、縦は描画時に回転させることもできるが、直接定義)
+            [[4, 4]],
+            [[4], [4]],
+            [[5, 5, 5]],
+            [[5], [5], [5]],
+            [[6, 6, 6, 6]],
+            [[6], [6], [6], [6]],
+            [[7, 7, 7, 7, 7]],
+            [[7], [7], [7], [7], [7]],
+            // L字型 (各種)
+            [[1, 0], [1, 0], [1, 1]],
+            [[1, 1], [1, 0], [1, 0]],
+            [[0, 1], [0, 1], [1, 1]],
+            [[1, 1], [0, 1], [0, 1]],
+            [[1, 1, 1], [1, 0, 0]],
+            [[1, 1, 1], [0, 0, 1]],
+            // T字型 (各種)
+            [[1, 1, 1], [0, 1, 0]],
+            [[0, 1, 0], [1, 1, 1]],
+            [[1, 0], [1, 1], [1, 0]],
+            [[0, 1], [1, 1], [0, 1]],
+            // Z字 / S字型
+            [[1, 1, 0], [0, 1, 1]],
+            [[0, 1, 1], [1, 1, 0]],
+            // 2x2 L字型（小さめ）
+            [[1, 1], [1, 0]],
+            [[1, 1], [0, 1]]
+        ];
+
+        // --- ゲーム状態管理クラス ---
+        class Game {
+            constructor() {
+                this.score = 0;
+                this.highScore = parseInt(localStorage.getItem('ocean_blast_highscore') || '0');
+                this.grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
+                
+                // 選択用3ブロック
+                this.handBlocks = [null, null, null];
+                this.handScale = [1, 1, 1]; // 縮小表示アニメーション用
+
+                this.isPlaying = false;
+                this.isGameOver = false;
+
+                // ドラッグ状態
+                this.dragState = {
+                    active: false,
+                    blockIndex: -1,     // 0, 1, 2
+                    startX: 0,          // ドラッグ開始時の座標
+                    startY: 0,
+                    currentX: 0,
+                    currentY: 0,
+                    offsetX: 0,         // 指・マウス位置とブロック中心のズレ
+                    offsetY: 0,
+                    canvasScale: 1      // メインキャンバスと手元キャンバスの比率
+                };
+
+                // パーティクル・演出管理
+                this.particles = [];
+                this.bubbles = []; // Canvas上のゲーム内気泡
+                
+                // キャンバス要素のバインド
+                this.mainCanvas = document.getElementById('game-canvas');
+                this.mainCtx = this.mainCanvas.getContext('2d');
+                
+                this.handCanvases = [
+                    document.getElementById('block-canvas-0'),
+                    document.getElementById('block-canvas-1'),
+                    document.getElementById('block-canvas-2')
+                ];
+                this.handCtxs = this.handCanvases.map(c => c.getContext('2d'));
+
+                this.initBubblesEffect();
+                this.bindEvents();
+                this.updateScoreUI();
+                
+                // 高解像度ディスプレイ対応 (DPR)
+                this.resizeCanvases();
+                window.addEventListener('resize', () => {
+                    this.resizeCanvases();
+                    this.draw();
+                });
+            }
+
+            // HTML側の浮遊泡の生成
+            initBubblesEffect() {
+                const container = document.getElementById('bubbles-container');
+                container.innerHTML = '';
+                const bubbleCount = 20;
+                for (let i = 0; i < bubbleCount; i++) {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'bubble';
+                    const size = Math.random() * 25 + 5;
+                    bubble.style.width = `${size}px`;
+                    bubble.style.height = `${size}px`;
+                    bubble.style.left = `${Math.random() * 100}%`;
+                    bubble.style.animationDelay = `${Math.random() * 8}s`;
+                    bubble.style.animationDuration = `${Math.random() * 5 + 6}s`;
+                    container.appendChild(bubble);
+                }
+            }
+
+            resizeCanvases() {
+                const dpr = window.devicePixelRatio || 1;
+                
+                // メインキャンバスの物理サイズ調整
+                const rect = this.mainCanvas.parentElement.getBoundingClientRect();
+                const size = Math.min(rect.width, rect.height);
+                
+                this.mainCanvas.width = size * dpr;
+                this.mainCanvas.height = size * dpr;
+                this.mainCanvas.style.width = `${size}px`;
+                this.mainCanvas.style.height = `${size}px`;
+                this.mainCtx.scale(dpr, dpr);
+                this.mainCanvasSize = size;
+
+                // 手元キャンバスの物理サイズ調整
+                this.handCanvases.forEach((canvas) => {
+                    const hRect = canvas.parentElement.getBoundingClientRect();
+                    const hSize = 96; // 固定値
+                    canvas.width = hSize * dpr;
+                    canvas.height = hSize * dpr;
+                    canvas.style.width = `${hSize}px`;
+                    canvas.style.height = `${hSize}px`;
+                    const ctx = canvas.getContext('2d');
+                    ctx.scale(dpr, dpr);
+                });
+            }
+
+            startNewGame() {
+                this.grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
+                this.score = 0;
+                this.isGameOver = false;
+                this.isPlaying = true;
+                this.particles = [];
+                this.generateNewHand();
+                this.updateScoreUI();
+                
+                document.getElementById('overlay').style.opacity = '0';
+                document.getElementById('overlay').style.pointerEvents = 'none';
+
+                this.showToast("深い海へようこそ！ゲーム開始！");
+                this.triggerExplosion(GRID_SIZE / 2, GRID_SIZE / 2, 30, '#00f2fe');
+            }
+
+            // 手元の3枠に新しいブロックをランダム生成
+            generateNewHand() {
+                for (let i = 0; i < 3; i++) {
+                    // ランダムな形状を選択
+                    const shapeIndex = Math.floor(Math.random() * SHAPES.length);
+                    // 色を割り振る
+                    const colorIndex = Math.floor(Math.random() * COLORS.blocks.length);
+                    
+                    const template = SHAPES[shapeIndex];
+                    // テンプレートブロックの数値をカラーインデックス+1にマッピング
+                    const matrix = template.map(row => 
+                        row.map(cell => cell === 1 ? colorIndex + 1 : 0)
+                    );
+
+                    this.handBlocks[i] = {
+                        matrix: matrix,
+                        width: matrix[0].length,
+                        height: matrix.length,
+                        colorIndex: colorIndex
+                    };
+                    this.handScale[i] = 0; // スケールアップ演出用
+                }
+            }
+
+            // 新たに手元のブロックを補充する必要があるかチェック（3つ全て空になった時）
+            checkRefill() {
+                if (this.handBlocks.every(b => b === null)) {
+                    this.generateNewHand();
+                }
+            }
+
+            // 点数の更新
+            updateScoreUI() {
+                document.getElementById('score').innerText = this.score;
+                document.getElementById('high-score').innerText = this.highScore;
+            }
+
+            // トースト通知
+            showToast(msg) {
+                const toast = document.getElementById('toast');
+                document.getElementById('toast-text').innerText = msg;
+                toast.style.transform = 'translateY(0)';
+                toast.style.opacity = '1';
+                
+                if (this.toastTimeout) clearTimeout(this.toastTimeout);
+                this.toastTimeout = setTimeout(() => {
+                    toast.style.transform = 'translateY(80px)';
+                    toast.style.opacity = '0';
+                }, 2000);
+            }
+
+            // --- 描画ロジック ---
+            
+            // ブロックそのものを描画する共通関数 (海の光沢のある3D風ブロック)
+            drawBlockUnit(ctx, x, y, size, colorIndex, isGhost = false) {
+                const colors = COLORS.blocks[colorIndex];
+                if (!colors) return;
+
+                ctx.save();
+                
+                if (isGhost) {
+                    ctx.globalAlpha = 0.5;
+                }
+
+                const radius = size * 0.22; // 丸みのある角
+                
+                // ドロップシャドウ
+                if (!isGhost) {
+                    ctx.shadowColor = COLORS.shadow;
+                    ctx.shadowBlur = 4;
+                    ctx.shadowOffsetX = 1;
+                    ctx.shadowOffsetY = 2;
+                }
+
+                // ベースグラデーション
+                const grad = ctx.createLinearGradient(x, y, x + size, y + size);
+                grad.addColorStop(0, colors[0]);
+                grad.addColorStop(1, colors[1]);
+
+                // 角丸四角形パス作成
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.arcTo(x + size, y, x + size, y + size, radius);
+                ctx.arcTo(x + size, y + size, x, y + size, radius);
+                ctx.arcTo(x, y + size, x, y, radius);
+                ctx.arcTo(x, y, x + size, y, radius);
+                ctx.closePath();
+                
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                // 光沢（真珠・水滴風テクスチャ）
+                ctx.shadowColor = 'transparent'; // シャドウをリセット
+                ctx.beginPath();
+                ctx.ellipse(x + size * 0.3, y + size * 0.3, size * 0.2, size * 0.1, Math.PI / -4, 0, Math.PI * 2);
+                const whiteGrad = ctx.createRadialGradient(x + size * 0.3, y + size * 0.3, 0, x + size * 0.3, y + size * 0.3, size * 0.2);
+                whiteGrad.addColorStop(0, 'rgba(255, 255, 255, 0.65)');
+                whiteGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = whiteGrad;
+                ctx.fill();
+
+                // 輪郭線
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            // メイングリッドのセルサイズを計算
+            getCellSize() {
+                const totalPadding = GRID_PADDING * 2;
+                return (this.mainCanvasSize - totalPadding) / GRID_SIZE;
+            }
+
+            // メイングリッド描画
+            drawGrid() {
+                const cellSize = this.getCellSize();
+                const offset = GRID_PADDING;
+
+                // 深海の海底質感
+                this.mainCtx.fillStyle = COLORS.gridBg;
+                this.mainCtx.fillRect(0, 0, this.mainCanvasSize, this.mainCanvasSize);
+
+                // うっすらとグリッド全体の影と線
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    for (let c = 0; c < GRID_SIZE; c++) {
+                        const x = offset + c * cellSize;
+                        const y = offset + r * cellSize;
+                        const cellVal = this.grid[r][c];
+
+                        if (cellVal === 0) {
+                            // 空のセル（海の格子）
+                            this.mainCtx.fillStyle = COLORS.cellEmpty;
+                            this.mainCtx.beginPath();
+                            const rCorner = cellSize * 0.15;
+                            this.mainCtx.roundRect(x + 1.5, y + 1.5, cellSize - 3, cellSize - 3, rCorner);
+                            this.mainCtx.fill();
+                            
+                            // 格子の輪郭
+                            this.mainCtx.strokeStyle = COLORS.gridLine;
+                            this.mainCtx.lineWidth = 1;
+                            this.mainCtx.stroke();
+                        } else {
+                            // 配置されたブロック
+                            this.drawBlockUnit(this.mainCtx, x + 1, y + 1, cellSize - 2, cellVal - 1);
+                        }
+                    }
+                }
+            }
+
+            // 手元の3枠キャンバスを描画
+            drawHandCanvases() {
+                for (let i = 0; i < 3; i++) {
+                    const canvas = this.handCanvases[i];
+                    const ctx = this.handCtxs[i];
+                    const block = this.handBlocks[i];
+                    const w = 96; // canvas.style.width
+                    const h = 96;
+
+                    // クリア
+                    ctx.clearRect(0, 0, w, h);
+
+                    // ドラッグ中のブロックは手元では非表示にする
+                    if (this.dragState.active && this.dragState.blockIndex === i) {
+                        continue;
+                    }
+
+                    if (block) {
+                        // アニメーション用のスケールアップ
+                        if (this.handScale[i] < 1) {
+                            this.handScale[i] += 0.08;
+                            if (this.handScale[i] > 1) this.handScale[i] = 1;
+                        }
+
+                        ctx.save();
+                        ctx.translate(w / 2, h / 2);
+                        ctx.scale(this.handScale[i], this.handScale[i]);
+
+                        // 手元枠の中にきれいに収めるためのサイズ計算
+                        const maxDim = Math.max(block.width, block.height);
+                        const cellSize = Math.min(18, 55 / maxDim); // 縮小表示
+                        
+                        const blockW = block.width * cellSize;
+                        const blockH = block.height * cellSize;
+
+                        ctx.translate(-blockW / 2, -blockH / 2);
+
+                        for (let r = 0; r < block.height; r++) {
+                            for (let c = 0; c < block.width; c++) {
+                                if (block.matrix[r][c] > 0) {
+                                    this.drawBlockUnit(ctx, c * cellSize, r * cellSize, cellSize - 1, block.colorIndex);
+                                }
+                            }
+                        }
+                        ctx.restore();
+                    } else {
+                        // ブロックがない場合のうっすらとしたお椀状のインジケーター
+                        ctx.save();
+                        ctx.strokeStyle = 'rgba(20, 50, 100, 0.4)';
+                        ctx.lineWidth = 2;
+                        ctx.setLineDash([4, 4]);
+                        ctx.beginPath();
+                        ctx.arc(w/2, h/2, 25, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                }
+            }
+
+            // 現在ドラッグされているブロックのゴーストプレビュー（メイングリッド上に投影）
+            drawGhostBlock() {
+                if (!this.dragState.active) return;
+                
+                const block = this.handBlocks[this.dragState.blockIndex];
+                if (!block) return;
+
+                const gridPos = this.getGridPosition(this.dragState.currentX, this.dragState.currentY, block);
+                
+                // グリッド範囲内に収まっており、配置可能な場合のみゴーストを薄く描画
+                if (gridPos && this.canPlaceBlock(gridPos.row, gridPos.col, block)) {
+                    const cellSize = this.getCellSize();
+                    const offset = GRID_PADDING;
+
+                    for (let r = 0; r < block.height; r++) {
+                        for (let c = 0; c < block.width; c++) {
+                            if (block.matrix[r][c] > 0) {
+                                const gx = offset + (gridPos.col + c) * cellSize;
+                                const gy = offset + (gridPos.row + r) * cellSize;
+                                this.drawBlockUnit(this.mainCtx, gx + 1, gy + 1, cellSize - 2, block.colorIndex, true);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ドラッグ中のブロックを描画（メインキャンバスの前面に描画）
+            drawDraggingBlock() {
+                if (!this.dragState.active) return;
+
+                const block = this.handBlocks[this.dragState.blockIndex];
+                if (!block) return;
+
+                const cellSize = this.getCellSize() * 0.9; // ドロップ時にピタッと合うように元の実寸に近いサイズにする
+                const w = block.width * cellSize;
+                const h = block.height * cellSize;
+
+                // 指やマウスのドラッグ位置に追従
+                // ドラッグ開始時のオフセットを適用して位置決め
+                const drawX = this.dragState.currentX - this.dragState.offsetX;
+                const drawY = this.dragState.currentY - this.dragState.offsetY;
+
+                this.mainCtx.save();
+                
+                // 浮かび上がっているような少し大きめのシャドウ
+                this.mainCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+                this.mainCtx.shadowBlur = 12;
+                this.mainCtx.shadowOffsetX = 3;
+                this.mainCtx.shadowOffsetY = 6;
+
+                for (let r = 0; r < block.height; r++) {
+                    for (let c = 0; c < block.width; c++) {
+                        if (block.matrix[r][c] > 0) {
+                            const bx = drawX + c * cellSize;
+                            const by = drawY + r * cellSize;
+                            this.drawBlockUnit(this.mainCtx, bx, by, cellSize - 1, block.colorIndex);
+                        }
+                    }
+                }
+
+                this.mainCtx.restore();
+            }
+
+            // パーティクル＆気泡のアップデートと描画
+            updateAndDrawEffects() {
+                const ctx = this.mainCtx;
+                
+                // 定期的に泡を湧き上がらせる
+                if (Math.random() < 0.05) {
+                    this.bubbles.push({
+                        x: Math.random() * this.mainCanvasSize,
+                        y: this.mainCanvasSize + 10,
+                        vx: (Math.random() - 0.5) * 0.4,
+                        vy: -(Math.random() * 0.8 + 0.4),
+                        r: Math.random() * 4 + 1.5,
+                        alpha: Math.random() * 0.5 + 0.3
+                    });
+                }
+
+                // 気泡の描画＆更新
+                for (let i = this.bubbles.length - 1; i >= 0; i--) {
+                    const b = this.bubbles[i];
+                    b.x += b.vx;
+                    b.y += b.vy;
+                    
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${b.alpha})`;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${b.alpha * 0.2})`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+
+                    // 画面外に消えたら削除
+                    if (b.y < -10) {
+                        this.bubbles.splice(i, 1);
+                    }
+                }
+
+                // 爆発・ブラストパーティクルの描画＆更新
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += p.gravity || 0; // 重力（海中のため抵抗）
+                    p.vx *= 0.95; // 水の摩擦
+                    p.vy *= 0.95;
+                    p.life -= 1;
+
+                    ctx.save();
+                    ctx.globalAlpha = p.life / p.maxLife;
+                    ctx.shadowBlur = p.glow ? 6 : 0;
+                    ctx.shadowColor = p.color;
+
+                    // パーティクルの形（泡か、火花、水の飛沫）
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    if (p.type === 'bubble') {
+                        ctx.strokeStyle = p.color;
+                        ctx.lineWidth = 1.5;
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.stroke();
+                    } else {
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+            }
+
+            // パーティクル発生エフェクト
+            triggerExplosion(gridX, gridY, count, colorHex, isLineBlast = false) {
+                const cellSize = this.getCellSize();
+                const offset = GRID_PADDING;
+                const px = offset + gridX * cellSize + cellSize / 2;
+                const py = offset + gridY * cellSize + cellSize / 2;
+
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = isLineBlast ? (Math.random() * 5 + 3) : (Math.random() * 3 + 1);
+                    const life = Math.floor(Math.random() * 20) + 15;
+                    
+                    // 海の中なので、きらめく破片と上昇する泡を発生
+                    const type = Math.random() < 0.4 ? 'bubble' : 'spark';
+
+                    this.particles.push({
+                        x: px,
+                        y: py,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - (type === 'bubble' ? 0.5 : 0), // 泡は自動浮上
+                        gravity: type === 'bubble' ? -0.05 : 0.02, // 泡は負の重力
+                        size: Math.random() * (isLineBlast ? 6 : 4) + 2,
+                        color: type === 'bubble' ? '#9ee8ff' : colorHex,
+                        life: life,
+                        maxLife: life,
+                        type: type,
+                        glow: true
+                    });
+                }
+            }
+
+            // メイン描画ループ
+            draw() {
+                this.mainCtx.clearRect(0, 0, this.mainCanvasSize, this.mainCanvasSize);
+                
+                // 1. 海のグリッド
+                this.drawGrid();
+
+                // 2. プレビュー（ゴースト）
+                this.drawGhostBlock();
+
+                // 3. パーティクルや気泡
+                this.updateAndDrawEffects();
+
+                // 4. ドラッグされている実体ブロック
+                this.drawDraggingBlock();
+
+                // 5. 手元の選択枠の更新描画
+                this.drawHandCanvases();
+            }
+
+            // --- ゲームロジック・判定 ---
+
+            // 指定位置にブロックが置けるか判定
+            canPlaceBlock(startRow, startCol, block) {
+                for (let r = 0; r < block.height; r++) {
+                    for (let c = 0; c < block.width; c++) {
+                        if (block.matrix[r][c] > 0) {
+                            const gridRow = startRow + r;
+                            const gridCol = startCol + c;
+
+                            // グリッドをはみ出る場合はダメ
+                            if (gridRow < 0 || gridRow >= GRID_SIZE || gridCol < 0 || gridCol >= GRID_SIZE) {
+                                return false;
+                            }
+                            // 既にブロックが存在する場所はダメ
+                            if (this.grid[gridRow][gridCol] > 0) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+
+            // ブロックを配置する
+            placeBlock(startRow, startCol, blockIndex) {
+                const block = this.handBlocks[blockIndex];
+                if (!block) return false;
+
+                for (let r = 0; r < block.height; r++) {
+                    for (let c = 0; c < block.width; c++) {
+                        if (block.matrix[r][c] > 0) {
+                            this.grid[startRow + r][startCol + c] = block.matrix[r][c];
+                            // 配置した各セルから小規模の配置スプラッシュエフェクト
+                            const colHex = COLORS.blocks[block.colorIndex][0];
+                            this.triggerExplosion(startCol + c, startRow + r, 5, colHex);
+                        }
+                    }
+                }
+
+                // スコア加算 (配置したブロックのセル数分)
+                let placedCells = 0;
+                block.matrix.forEach(row => row.forEach(val => { if (val > 0) placedCells++; }));
+                this.score += placedCells;
+
+                // 配置したので手元から取り除く
+                this.handBlocks[blockIndex] = null;
+                
+                // ライン判定
+                this.checkLines();
+
+                // 補充確認
+                this.checkRefill();
+
+                // ゲームオーバーチェック
+                this.checkGameOver();
+
+                this.updateScoreUI();
+                return true;
+            }
+
+            // 行と列の揃い判定と削除
+            checkLines() {
+                const rowsToRemove = [];
+                const colsToRemove = [];
+
+                // 行判定
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    if (this.grid[r].every(val => val > 0)) {
+                        rowsToRemove.push(r);
+                    }
+                }
+
+                // 列判定
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    let colComplete = true;
+                    for (let r = 0; r < GRID_SIZE; r++) {
+                        if (this.grid[r][c] === 0) {
+                            colComplete = false;
+                            break;
+                        }
+                    }
+                    if (colComplete) {
+                        colsToRemove.push(c);
+                    }
+                }
+
+                const linesCount = rowsToRemove.length + colsToRemove.length;
+                if (linesCount === 0) return;
+
+                // ライン消去・ブラスト演出
+                // 同時に複数の消去を表現するため、一時的に色情報を退避してエフェクト発動
+                rowsToRemove.forEach(r => {
+                    for (let c = 0; c < GRID_SIZE; c++) {
+                        const cellColorVal = this.grid[r][c] - 1;
+                        const colHex = (cellColorVal >= 0) ? COLORS.blocks[cellColorVal][0] : '#00f2fe';
+                        // 水しぶき・ブラスト
+                        this.triggerExplosion(c, r, 12, colHex, true);
+                    }
+                });
+
+                colsToRemove.forEach(c => {
+                    for (let r = 0; r < GRID_SIZE; r++) {
+                        // 重複して消去エフェクトが出すぎないように少しランダムにする
+                        if (rowsToRemove.includes(r) && Math.random() > 0.3) continue;
+                        const cellColorVal = this.grid[r][c] - 1;
+                        const colHex = (cellColorVal >= 0) ? COLORS.blocks[cellColorVal][0] : '#00f2fe';
+                        this.triggerExplosion(c, r, 12, colHex, true);
+                    }
+                });
+
+                // グリッドデータの消去
+                rowsToRemove.forEach(r => {
+                    for (let c = 0; c < GRID_SIZE; c++) this.grid[r][c] = 0;
+                });
+                colsToRemove.forEach(c => {
+                    for (let r = 0; r < GRID_SIZE; r++) this.grid[r][c] = 0;
+                });
+
+                // スコア計算 (消去ライン数が多いとコンボ・マルチボーナス)
+                // 1本: 100点, 2本: 250点, 3本: 450点, 4本: 700点, 5本以上: 1000点+
+                const lineScores = [0, 100, 250, 450, 700, 1000];
+                const scoreGain = (lineScores[linesCount] || (linesCount * 250));
+                this.score += scoreGain;
+
+                // コメント褒め言葉
+                if (linesCount >= 3) {
+                    this.showToast(`ファンタスティック！ +${scoreGain}!!`);
+                } else if (linesCount === 2) {
+                    this.showToast(`ダブル・ブラスト！ +${scoreGain}!`);
+                } else {
+                    this.showToast(`ブラスト！ +${scoreGain}`);
+                }
+
+                // ハイスコア更新
+                if (this.score > this.highScore) {
+                    this.highScore = this.score;
+                    localStorage.setItem('ocean_blast_highscore', this.highScore);
+                    this.updateScoreUI();
+                }
+            }
+
+            // 手元の残ったブロックがグリッドのどこにも置けなくなったらゲームオーバー
+            checkGameOver() {
+                let anyPlaceable = false;
+
+                for (let i = 0; i < 3; i++) {
+                    const block = this.handBlocks[i];
+                    if (!block) continue; // 空枠はスキップ
+
+                    // 10x10のどこかに置けるか総当たりチェック
+                    for (let r = 0; r <= GRID_SIZE - block.height; r++) {
+                        for (let c = 0; c <= GRID_SIZE - block.width; c++) {
+                            if (this.canPlaceBlock(r, c, block)) {
+                                anyPlaceable = true;
+                                break;
+                            }
+                        }
+                        if (anyPlaceable) break;
+                    }
+                    if (anyPlaceable) break;
+                }
+
+                // 有効なブロックが存在し、その全てがどこにも配置不能なとき、ゲームオーバー
+                const remainingBlocks = this.handBlocks.filter(b => b !== null).length;
+                if (remainingBlocks > 0 && !anyPlaceable) {
+                    this.triggerGameOver();
+                }
+            }
+
+            triggerGameOver() {
+                this.isGameOver = true;
+                this.isPlaying = false;
+                
+                // オーバーレイ表示
+                document.getElementById('overlay-icon').className = 'fa-solid fa-water text-rose-500 animate-pulse';
+                document.getElementById('overlay-title').innerText = 'Game Over';
+                document.getElementById('overlay-desc').innerHTML = `ブロックが配置できなくなりました。<br><strong class="text-cyan-300 text-lg">最終スコア: ${this.score}</strong>`;
+                document.getElementById('start-btn').innerHTML = '<span>もう一度遊ぶ</span> <i class="fa-solid fa-rotate-right"></i>';
+                
+                const overlay = document.getElementById('overlay');
+                overlay.style.opacity = '1';
+                overlay.style.pointerEvents = 'auto';
+
+                this.showToast("ゲームオーバー！素晴らしい挑戦でした！");
+            }
+
+            // --- インタラクション (ドラッグ & ドロップ) ---
+
+            // 手元のどこを押したか判定しドラッグを開始
+            startDrag(canvasIndex, clientX, clientY) {
+                if (!this.isPlaying || this.isGameOver) return;
+                
+                const block = this.handBlocks[canvasIndex];
+                if (!block) return;
+
+                const handCanvas = this.handCanvases[canvasIndex];
+                const handRect = handCanvas.getBoundingClientRect();
+                const mainRect = this.mainCanvas.getBoundingClientRect();
+
+                // ドラッグ開始に必要な状態の記録
+                this.dragState.active = true;
+                this.dragState.blockIndex = canvasIndex;
+                
+                // メインキャンバス座標系にマウス座標を変換
+                const currentXOnMain = clientX - mainRect.left;
+                const currentYOnMain = clientY - mainRect.top;
+
+                this.dragState.currentX = currentXOnMain;
+                this.dragState.currentY = currentYOnMain;
+
+                // ブロックの中心とドラッグ点のオフセット
+                // モバイル向けに指の下にブロックが隠れないように、少し上側（Y軸負方向）にオフセットを設定する
+                const isTouch = ('ontouchstart' in window);
+                const blockCellSize = this.getCellSize() * 0.9;
+                
+                this.dragState.offsetX = (block.width * blockCellSize) / 2;
+                this.dragState.offsetY = isTouch ? (block.height * blockCellSize) * 1.2 : (block.height * blockCellSize) / 2;
+
+                // イベントハンドリングをスムーズにするため、メインにマウス追従させる
+                this.mainCanvas.style.cursor = 'grabbing';
+            }
+
+            // ドラッグ移動中
+            moveDrag(clientX, clientY) {
+                if (!this.dragState.active) return;
+
+                const mainRect = this.mainCanvas.getBoundingClientRect();
+                this.dragState.currentX = clientX - mainRect.left;
+                this.dragState.currentY = clientY - mainRect.top;
+            }
+
+            // ドラッグ終了 (ドロップ)
+            endDrag() {
+                if (!this.dragState.active) return;
+
+                const block = this.handBlocks[this.dragState.blockIndex];
+                
+                if (block) {
+                    const gridPos = this.getGridPosition(this.dragState.currentX, this.dragState.currentY, block);
+
+                    if (gridPos && this.canPlaceBlock(gridPos.row, gridPos.col, block)) {
+                        // 配置成功！
+                        this.placeBlock(gridPos.row, gridPos.col, this.dragState.blockIndex);
+                    } else {
+                        // 配置失敗、シュルッと戻るエフェクトの代わりにそのままドラッグ解除
+                    }
+                }
+
+                // ドラッグ状態のリセット
+                this.dragState.active = false;
+                this.dragState.blockIndex = -1;
+                this.mainCanvas.style.cursor = 'pointer';
+            }
+
+            // マウス/タッチ座標から対応するメイングリッドの行列位置を取得
+            getGridPosition(canvasX, canvasY, block) {
+                const cellSize = this.getCellSize();
+                const offset = GRID_PADDING;
+
+                // 指の位置からオフセットを引いて、ブロックの左上位置の基準点を求める
+                const blockLeftX = canvasX - this.dragState.offsetX;
+                const blockTopY = canvasY - this.dragState.offsetY;
+
+                // セルの左端と上端に合わせてインデックスを計算
+                // 中心を基準にするための + cellSize/2 調整
+                const col = Math.round((blockLeftX - offset) / cellSize);
+                const row = Math.round((blockTopY - offset) / cellSize);
+
+                // グリッド内に綺麗に収まりそうかチェック
+                if (col >= 0 && col <= GRID_SIZE - block.width &&
+                    row >= 0 && row <= GRID_SIZE - block.height) {
+                    return { row, col };
+                }
+
+                return null;
+            }
+
+            // イベントバインド
+            bindEvents() {
+                // UI ボタン関係
+                document.getElementById('start-btn').addEventListener('click', () => this.startNewGame());
+                document.getElementById('restart-btn').addEventListener('click', () => {
+                    this.startNewGame();
+                });
+
+                // マウス・タッチイベント (手元の3つのキャンバス用)
+                this.handCanvases.forEach((canvas, idx) => {
+                    // マウス
+                    canvas.addEventListener('mousedown', (e) => {
+                        this.startDrag(idx, e.clientX, e.clientY);
+                    });
+                    // タッチ
+                    canvas.addEventListener('touchstart', (e) => {
+                        if (e.touches.length > 0) {
+                            const t = e.touches[0];
+                            this.startDrag(idx, t.clientX, t.clientY);
+                        }
+                    }, { passive: true });
+                });
+
+                // マウス・タッチ移動 (ウィンドウ全体で検知することで画面外ドラッグに対応)
+                window.addEventListener('mousemove', (e) => {
+                    if (this.dragState.active) {
+                        this.moveDrag(e.clientX, e.clientY);
+                    }
+                });
+
+                window.addEventListener('touchmove', (e) => {
+                    if (this.dragState.active && e.touches.length > 0) {
+                        const t = e.touches[0];
+                        this.moveDrag(t.clientX, t.clientY);
+                    }
+                }, { passive: true });
+
+                // ドロップ処理
+                window.addEventListener('mouseup', () => {
+                    this.endDrag();
+                });
+
+                window.addEventListener('touchend', () => {
+                    this.endDrag();
+                });
+            }
+        }
+
+        // --- メインゲームループの実行 ---
+        window.onload = function() {
+            const game = new Game();
+
+            function loop() {
+                game.draw();
+                requestAnimationFrame(loop);
+            }
+
+            // ゲームループ開始
+            loop();
+        }
+    </script>
+</body>
+</html>
