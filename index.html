@@ -75,7 +75,7 @@
                 <h1 class="text-xl font-extrabold text-cyan-300 tracking-wider flex items-center gap-2">
                     <i class="fa-solid fa-water-ladder text-cyan-400"></i> Ocean Blast
                 </h1>
-                <p class="text-xs text-blue-300/80">深海のパズルゲーム</p>
+                <p class="text-xs text-blue-300/80">深海の生き物パズル</p>
             </div>
             <div class="flex gap-4">
                 <div class="text-right">
@@ -144,13 +144,13 @@
             shadow: 'rgba(0, 0, 0, 0.4)',
             // ブロック色の光輝くグラデーション（[開始色, 終了色, 真珠ハイライト色, パーティクル色]）
             blocks: [
-                ['#00f2fe', '#4facfe', '#ffffff', '#00f2fe'], // シアン水流
-                ['#30cfd0', '#330867', '#e2d9fc', '#30cfd0'], // 深海バイオレット
-                ['#ff0844', '#ffb199', '#ffffff', '#ff0844'], // サンゴピンク
-                ['#f12711', '#f5af19', '#fff3d1', '#f5af19'], // 黄金の真珠
-                ['#9be15d', '#00e3ae', '#ffffff', '#00e3ae'], // エメラルド藻
-                ['#a1c4fd', '#c2e9fb', '#ffffff', '#c2e9fb'], // 浅瀬の水滴
-                ['#f093fb', '#f5576c', '#fff0f5', '#f5576c']  // 幻惑のクラゲ
+                ['#00f2fe', '#4facfe', '#ffffff', '#00f2fe'], // 0: クラゲ (シアン)
+                ['#d946ef', '#701a75', '#fdf4ff', '#d946ef'], // 1: メンダコ (紫・ピンク)
+                ['#ff0844', '#f43f5e', '#ffe4e6', '#ff0844'], // 2: ヒトデ (コーラルピンク)
+                ['#f5af19', '#eab308', '#fef9c3', '#f5af19'], // 3: チョウチンアンコウ (ゴールド)
+                ['#10b981', '#064e3b', '#ecfdf5', '#10b981'], // 4: ウニ (エメラルド)
+                ['#38bdf8', '#0284c7', '#f0f9ff', '#38bdf8'], // 5: クリオネ (ライトブルー)
+                ['#ec4899', '#9d174d', '#fdf2f8', '#ec4899']  // 6: タコ (マゼンタ)
             ]
         };
 
@@ -159,18 +159,18 @@
             // 1x1
             [[1]],
             // 2x2 正方形
-            [[2, 2], [2, 2]],
+            [[1, 1], [1, 1]],
             // 3x3 正方形
-            [[3, 3, 3], [3, 3, 3], [3, 3, 3]],
-            // 直線 (横、縦は描画時に回転させることもできるが、直接定義)
-            [[4, 4]],
-            [[4], [4]],
-            [[5, 5, 5]],
-            [[5], [5], [5]],
-            [[6, 6, 6, 6]],
-            [[6], [6], [6], [6]],
-            [[7, 7, 7, 7, 7]],
-            [[7], [7], [7], [7], [7]],
+            [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
+            // 直線
+            [[1, 1]],
+            [[1], [1]],
+            [[1, 1, 1]],
+            [[1], [1], [1]],
+            [[1, 1, 1, 1]],
+            [[1], [1], [1], [1]],
+            [[1, 1, 1, 1, 1]],
+            [[1], [1], [1], [1], [1]],
             // L字型 (各種)
             [[1, 0], [1, 0], [1, 1]],
             [[1, 1], [1, 0], [1, 0]],
@@ -315,9 +315,9 @@
                     const colorIndex = Math.floor(Math.random() * COLORS.blocks.length);
                     
                     const template = SHAPES[shapeIndex];
-                    // テンプレートブロックの数値をカラーインデックス+1にマッピング
+                    // すべての有効セル（値が0より大きいマス）をカラーインデックスに正しくマッピング
                     const matrix = template.map(row => 
-                        row.map(cell => cell === 1 ? colorIndex + 1 : 0)
+                        row.map(cell => cell > 0 ? colorIndex + 1 : 0)
                     );
 
                     this.handBlocks[i] = {
@@ -359,7 +359,7 @@
 
             // --- 描画ロジック ---
             
-            // ブロックそのものを描画する共通関数 (海の光沢のある3D風ブロック)
+            // ブロックそのものを描画する共通関数 (深海の生き物アイコン描画)
             drawBlockUnit(ctx, x, y, size, colorIndex, isGhost = false) {
                 const colors = COLORS.blocks[colorIndex];
                 if (!colors) return;
@@ -367,50 +367,256 @@
                 ctx.save();
                 
                 if (isGhost) {
-                    ctx.globalAlpha = 0.5;
+                    ctx.globalAlpha = 0.45;
                 }
 
-                const radius = size * 0.22; // 丸みのある角
-                
-                // ドロップシャドウ
-                if (!isGhost) {
-                    ctx.shadowColor = COLORS.shadow;
-                    ctx.shadowBlur = 4;
-                    ctx.shadowOffsetX = 1;
-                    ctx.shadowOffsetY = 2;
-                }
+                const rCorner = Math.max(0, size * 0.18);
+                const cx = x + size / 2;
+                const cy = y + size / 2;
 
-                // ベースグラデーション
-                const grad = ctx.createLinearGradient(x, y, x + size, y + size);
-                grad.addColorStop(0, colors[0]);
-                grad.addColorStop(1, colors[1]);
-
-                // 角丸四角形パス作成
+                // 共通背景：生き物たちがマス目として認識されやすいように、お椀型ガラスドームを敷く
+                ctx.fillStyle = 'rgba(12, 27, 54, 0.45)';
                 ctx.beginPath();
-                ctx.moveTo(x + radius, y);
-                ctx.arcTo(x + size, y, x + size, y + size, radius);
-                ctx.arcTo(x + size, y + size, x, y + size, radius);
-                ctx.arcTo(x, y + size, x, y, radius);
-                ctx.arcTo(x, y, x + size, y, radius);
-                ctx.closePath();
-                
-                ctx.fillStyle = grad;
+                ctx.roundRect(x + 1, y + 1, size - 2, size - 2, rCorner);
                 ctx.fill();
 
-                // 光沢（真珠・水滴風テクスチャ）
-                ctx.shadowColor = 'transparent'; // シャドウをリセット
-                ctx.beginPath();
-                ctx.ellipse(x + size * 0.3, y + size * 0.3, size * 0.2, size * 0.1, Math.PI / -4, 0, Math.PI * 2);
-                const whiteGrad = ctx.createRadialGradient(x + size * 0.3, y + size * 0.3, 0, x + size * 0.3, y + size * 0.3, size * 0.2);
-                whiteGrad.addColorStop(0, 'rgba(255, 255, 255, 0.65)');
-                whiteGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                ctx.fillStyle = whiteGrad;
-                ctx.fill();
-
-                // 輪郭線
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                ctx.lineWidth = 1.5;
+                // うっすら丸い枠線
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.lineWidth = 1;
                 ctx.stroke();
+
+                // 生き物ごとのユニーク描画
+                if (colorIndex === 0) {
+                    // --- 1. クラゲ (Jellyfish) ---
+                    // 傘
+                    ctx.fillStyle = colors[0];
+                    ctx.beginPath();
+                    ctx.arc(cx, cy - size * 0.08, size * 0.32, Math.PI, 0, false);
+                    ctx.lineTo(cx + size * 0.32, cy + size * 0.08);
+                    ctx.quadraticCurveTo(cx, cy + size * 0.18, cx - size * 0.32, cy + size * 0.08);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // 触手
+                    ctx.strokeStyle = colors[1];
+                    ctx.lineWidth = 1.5;
+                    for (let offset of [-size * 0.13, 0, size * 0.13]) {
+                        ctx.beginPath();
+                        ctx.moveTo(cx + offset, cy + size * 0.08);
+                        ctx.bezierCurveTo(
+                            cx + offset - size * 0.05, cy + size * 0.22, 
+                            cx + offset + size * 0.05, cy + size * 0.3, 
+                            cx + offset, cy + size * 0.38
+                        );
+                        ctx.stroke();
+                    }
+                    // おめめ
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath(); ctx.arc(cx - size * 0.09, cy - size * 0.02, size * 0.04, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(cx + size * 0.09, cy - size * 0.02, size * 0.04, 0, Math.PI * 2); ctx.fill();
+
+                } else if (colorIndex === 1) {
+                    // --- 2. メンダコ (Mendako) ---
+                    // ぷっくりした体
+                    ctx.fillStyle = colors[0];
+                    ctx.beginPath();
+                    ctx.moveTo(cx - size * 0.33, cy + size * 0.22);
+                    ctx.quadraticCurveTo(cx - size * 0.38, cy - size * 0.2, cx, cy - size * 0.22);
+                    ctx.quadraticCurveTo(cx + size * 0.38, cy - size * 0.2, cx + size * 0.33, cy + size * 0.22);
+                    ctx.quadraticCurveTo(cx, cy + size * 0.32, cx - size * 0.33, cy + size * 0.22);
+                    ctx.fill();
+                    // 耳（ヒレ）
+                    ctx.fillStyle = colors[1];
+                    // 左耳
+                    ctx.beginPath();
+                    ctx.ellipse(cx - size * 0.18, cy - size * 0.18, size * 0.09, size * 0.11, -Math.PI / 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    // 右耳
+                    ctx.beginPath();
+                    ctx.ellipse(cx + size * 0.18, cy - size * 0.18, size * 0.09, size * 0.11, Math.PI / 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    // おめめ
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath(); ctx.arc(cx - size * 0.11, cy + size * 0.02, size * 0.08, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(cx + size * 0.11, cy + size * 0.02, size * 0.08, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath(); ctx.arc(cx - size * 0.11, cy + size * 0.02, size * 0.05, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(cx + size * 0.11, cy + size * 0.02, size * 0.05, 0, Math.PI * 2); ctx.fill();
+                    // 口 (wっぽく)
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy + size * 0.08, 2, 0, Math.PI);
+                    ctx.stroke();
+
+                } else if (colorIndex === 2) {
+                    // --- 3. ヒトデ (Starfish) ---
+                    ctx.fillStyle = colors[0];
+                    ctx.beginPath();
+                    const spikes = 5;
+                    const outerRadius = size * 0.38;
+                    const innerRadius = size * 0.17;
+                    let rot = Math.PI / 2 * 3;
+                    let x_pos = cx;
+                    let y_pos = cy;
+                    const step = Math.PI / spikes;
+
+                    ctx.moveTo(cx, cy - outerRadius);
+                    for (let j = 0; j < spikes; j++) {
+                        x_pos = cx + Math.cos(rot) * outerRadius;
+                        y_pos = cy + Math.sin(rot) * outerRadius;
+                        ctx.lineTo(x_pos, y_pos);
+                        rot += step;
+
+                        x_pos = cx + Math.cos(rot) * innerRadius;
+                        y_pos = cy + Math.sin(rot) * innerRadius;
+                        ctx.lineTo(x_pos, y_pos);
+                        rot += step;
+                    }
+                    ctx.lineTo(cx, cy - outerRadius);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // ピンクのほっぺ
+                    ctx.fillStyle = '#fda4af';
+                    ctx.beginPath(); ctx.arc(cx - size * 0.11, cy + size * 0.04, size * 0.04, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(cx + size * 0.11, cy + size * 0.04, size * 0.04, 0, Math.PI * 2); ctx.fill();
+                    // おめめ
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath(); ctx.arc(cx - size * 0.07, cy - size * 0.03, size * 0.04, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(cx + size * 0.07, cy - size * 0.03, size * 0.04, 0, Math.PI * 2); ctx.fill();
+
+                } else if (colorIndex === 3) {
+                    // --- 4. チョウチンアンコウ (Anglerfish) ---
+                    // まるい体
+                    ctx.fillStyle = colors[0];
+                    ctx.beginPath();
+                    ctx.arc(cx + size * 0.06, cy + size * 0.04, size * 0.28, 0, Math.PI * 2);
+                    ctx.fill();
+                    // 尾びれ
+                    ctx.beginPath();
+                    ctx.moveTo(cx + size * 0.3, cy + size * 0.04);
+                    ctx.lineTo(cx + size * 0.44, cy - size * 0.11);
+                    ctx.lineTo(cx + size * 0.44, cy + size * 0.19);
+                    ctx.closePath();
+                    ctx.fill();
+                    // 提灯のつる
+                    ctx.strokeStyle = colors[1];
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(cx - size * 0.05, cy - size * 0.14);
+                    ctx.quadraticCurveTo(cx - size * 0.25, cy - size * 0.28, cx - size * 0.14, cy - size * 0.33);
+                    ctx.stroke();
+                    // つるの先（提灯）
+                    ctx.fillStyle = '#fff3d1';
+                    ctx.shadowColor = '#f5af19';
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(cx - size * 0.14, cy - size * 0.33, size * 0.08, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0; // リセット
+                    // 怒った感じのおめめ
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath(); ctx.arc(cx - size * 0.09, cy - size * 0.02, size * 0.07, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath(); ctx.arc(cx - size * 0.11, cy - size * 0.02, size * 0.04, 0, Math.PI * 2); ctx.fill();
+                    // 牙/は
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.moveTo(cx - size * 0.15, cy + size * 0.13);
+                    ctx.lineTo(cx - size * 0.1, cy + size * 0.19);
+                    ctx.lineTo(cx - size * 0.05, cy + size * 0.13);
+                    ctx.fill();
+
+                } else if (colorIndex === 4) {
+                    // --- 5. ウニ (Sea Urchin) ---
+                    // トゲ
+                    ctx.strokeStyle = colors[0];
+                    ctx.lineWidth = 2;
+                    for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+                        ctx.beginPath();
+                        ctx.moveTo(cx, cy);
+                        ctx.lineTo(cx + Math.cos(angle) * (size * 0.38), cy + Math.sin(angle) * (size * 0.38));
+                        ctx.stroke();
+                    }
+                    // まるい体
+                    ctx.fillStyle = colors[1];
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, size * 0.25, 0, Math.PI * 2);
+                    ctx.fill();
+                    // とぼけたおめめ
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath(); ctx.arc(cx - size * 0.07, cy - size * 0.02, size * 0.06, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(cx + size * 0.07, cy - size * 0.02, size * 0.06, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath(); ctx.arc(cx - size * 0.07, cy - size * 0.02, size * 0.03, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(cx + size * 0.07, cy - size * 0.02, size * 0.03, 0, Math.PI * 2); ctx.fill();
+
+                } else if (colorIndex === 5) {
+                    // --- 6. クリオネ (Sea Angel) ---
+                    // 透明ボディ
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.beginPath();
+                    ctx.ellipse(cx, cy, size * 0.12, size * 0.32, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // 翼足（左右の羽）
+                    ctx.fillStyle = 'rgba(161, 196, 253, 0.85)';
+                    // 左
+                    ctx.beginPath();
+                    ctx.ellipse(cx - size * 0.17, cy - size * 0.04, size * 0.15, size * 0.07, -Math.PI / 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    // 右
+                    ctx.beginPath();
+                    ctx.ellipse(cx + size * 0.17, cy - size * 0.04, size * 0.15, size * 0.07, Math.PI / 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    // 赤い心臓
+                    ctx.fillStyle = '#ef4444';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy - size * 0.07, size * 0.06, 0, Math.PI * 2);
+                    ctx.fill();
+                    // 頭のツノ
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(cx - size * 0.04, cy - size * 0.24);
+                    ctx.quadraticCurveTo(cx - size * 0.09, cy - size * 0.33, cx - size * 0.07, cy - size * 0.33);
+                    ctx.moveTo(cx + size * 0.04, cy - size * 0.24);
+                    ctx.quadraticCurveTo(cx + size * 0.09, cy - size * 0.33, cx + size * 0.07, cy - size * 0.33);
+                    ctx.stroke();
+
+                } else if (colorIndex === 6) {
+                    // --- 7. タコ (Octopus) ---
+                    // まるい頭
+                    ctx.fillStyle = colors[0];
+                    ctx.beginPath();
+                    ctx.arc(cx, cy - size * 0.08, size * 0.27, Math.PI, 0, false);
+                    ctx.quadraticCurveTo(cx + size * 0.27, cy + size * 0.14, cx + size * 0.14, cy + size * 0.14);
+                    ctx.quadraticCurveTo(cx, cy + size * 0.04, cx - size * 0.14, cy + size * 0.14);
+                    ctx.quadraticCurveTo(cx - size * 0.27, cy + size * 0.14, cx - size * 0.27, cy - size * 0.08);
+                    ctx.closePath();
+                    ctx.fill();
+                    // 足
+                    ctx.strokeStyle = colors[1];
+                    ctx.lineWidth = 2.5;
+                    for (let offset of [-size * 0.15, -size * 0.05, size * 0.05, size * 0.15]) {
+                        ctx.beginPath();
+                        ctx.moveTo(cx + offset, cy + size * 0.11);
+                        ctx.quadraticCurveTo(
+                            cx + offset + (offset > 0 ? 3 : -3), cy + size * 0.25, 
+                            cx + offset + (offset > 0 ? -2 : 2), cy + size * 0.36
+                        );
+                        ctx.stroke();
+                    }
+                    // おめめ (片方は丸、片方はウィンクライン)
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath(); ctx.arc(cx - size * 0.08, cy - size * 0.05, size * 0.04, 0, Math.PI * 2); ctx.fill();
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(cx + size * 0.04, cy - size * 0.05);
+                    ctx.lineTo(cx + size * 0.12, cy - size * 0.05);
+                    ctx.stroke();
+                }
 
                 ctx.restore();
             }
@@ -441,7 +647,8 @@
                             // 空のセル（海の格子）
                             this.mainCtx.fillStyle = COLORS.cellEmpty;
                             this.mainCtx.beginPath();
-                            const rCorner = cellSize * 0.15;
+                            // マイナス値のエラーを防ぐため、Math.maxを適用して最小値を0にする
+                            const rCorner = Math.max(0, cellSize * 0.15);
                             this.mainCtx.roundRect(x + 1.5, y + 1.5, cellSize - 3, cellSize - 3, rCorner);
                             this.mainCtx.fill();
                             
@@ -450,7 +657,7 @@
                             this.mainCtx.lineWidth = 1;
                             this.mainCtx.stroke();
                         } else {
-                            // 配置されたブロック
+                            // 配置された深海の生き物
                             this.drawBlockUnit(this.mainCtx, x + 1, y + 1, cellSize - 2, cellVal - 1);
                         }
                     }
@@ -920,7 +1127,7 @@
                 const blockCellSize = this.getCellSize() * 0.9;
                 
                 this.dragState.offsetX = (block.width * blockCellSize) / 2;
-                this.dragState.offsetY = isTouch ? (block.height * blockCellSize) * 1.2 : (block.height * blockCellSize) / 2;
+                this.dragState.offsetY = isTouch ? (block.height * blockCellSize) * 1.25 : (block.height * blockCellSize) / 2;
 
                 // イベントハンドリングをスムーズにするため、メインにマウス追従させる
                 this.mainCanvas.style.cursor = 'grabbing';
@@ -948,7 +1155,7 @@
                         // 配置成功！
                         this.placeBlock(gridPos.row, gridPos.col, this.dragState.blockIndex);
                     } else {
-                        // 配置失敗、シュルッと戻るエフェクトの代わりにそのままドラッグ解除
+                        // 配置失敗
                     }
                 }
 
