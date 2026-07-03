@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>愛宕柿の紹介</title>
+
+  <style>
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", sans-serif;
+      background-color: #fff7e6;
+      color: #4a2c17;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #d97706;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    img {
+      width: 100%;
+      border-radius: 10px;
+      margin: 15px 0;
+    }
+
+    h2 {
+      border-left: 8px solid #d97706;
+      padding-left: 10px;
+    }
+
+    ul {
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #fbbf24;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 18px;
+      margin: 10px 5px;
+      background-color: #d97706;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+
+    .btn:hover {
+      background-color: #b45309;
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      background: #f3f4f6;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>愛宕柿（あたごがき）</h1>
+</header>
+
+<div class="container">
+
+  <h2>愛宕柿の魅力</h2>
+  <p>
+    愛宕柿は大玉で存在感のある柿で、しっかりとした甘みと独特の食感が特徴です。
+    渋柿として知られていますが、渋抜き処理をすることで濃厚な甘さが引き出されます。
+    果肉は柔らかくジューシーで、冬の味覚として多くの人に親しまれています。
+  </p>
+
+  <img src="atago-kaki.jpg" alt="愛宕柿の写真">
+
+  <h2>おすすめの食べ方・活用法</h2>
+  <ul>
+    <li>渋抜きしてそのまま生食で楽しむ</li>
+    <li>ヨーグルトやアイスにトッピングする</li>
+    <li>ドライフルーツやジャムに加工する</li>
+  </ul>
+
+  <h2>基本情報</h2>
+  <table>
+    <tr>
+      <th>旬の時期</th>
+      <th>主な産地</th>
+      <th>特徴</th>
+    </tr>
+    <tr>
+      <td>11月〜12月</td>
+      <td>広島県・岡山県・愛媛県</td>
+      <td>大玉で甘みが強く、渋抜きで食べる柿</td>
+    </tr>
+  </table>
+
+  <h2>関連リンク</h2>
+
+  <a class="btn" href="https://www.pref.hiroshima.lg.jp/site/education/" target="_blank">
+    西条農業高校（公式サイト）
+  </a>
+
+  <a class="btn" href="https://www.ja-hiroshima.or.jp/" target="_blank">
+    JA広島（特産品情報）
+  </a>
+
+</div>
+
+<footer>
+  © 愛宕柿紹介ページ
+</footer>
+
+</body>
+</html>
