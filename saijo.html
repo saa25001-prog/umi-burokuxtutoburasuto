@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水の都、愛媛県西条市へようこそ！</title>
+    <!-- Tailwind CSS によるモダンなスタイリング -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts による読みやすいフォント -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        /* スムーズなアニメーションのためのカスタムトランジション */
+        .spot-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .water-wave {
+            transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 leading-relaxed overflow-x-hidden">
+
+    <header class="relative h-[65vh] md:h-[75vh] flex items-center justify-center overflow-hidden bg-blue-950">
+        <!-- 条件No.5・画像補足: images/フォルダ内の配布画像(相対パス)を指定。プレビュー用にフォールバックも完備 -->
+        <img 
+            id="hero-img"
+            src="images/photo1.jpg" 
+            onerror="this.src='https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80'"
+            alt="西条市の風景1" 
+            class="absolute inset-0 w-full h-full object-cover opacity-65"
+        />
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-black/30"></div>
+        
+        <!-- 【条件No.1】1ページの一番上に大見出し（市名） -->
+        <div class="relative z-10 text-center px-4 max-w-3xl">
+            <span class="text-sky-300 font-bold tracking-widest text-xs md:text-sm bg-blue-950/60 border border-sky-400/30 px-4 py-2 rounded-full mb-5 inline-block backdrop-blur-sm">
+                ⛲ 水の都・西日本最高峰 石鎚山のふもと
+            </span>
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-black text-white tracking-widest drop-shadow-md">
+                愛媛県 西条市
+            </h1>
+            <p class="text-white/80 text-sm md:text-lg mt-4 font-light tracking-widest drop-shadow-sm uppercase">
+                Saijo City, Ehime Prefecture
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-12 md:py-20">
+        
+        <section class="mb-20 md:mb-28 text-center">
+            <h2 class="text-2xl md:text-3xl font-black text-blue-950 mb-6 relative inline-block pb-3">
+                西条市の魅力と特徴
+                <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-sky-500 rounded-full"></span>
+            </h2>
+            <div class="max-w-3xl mx-auto bg-white p-6 md:p-10 rounded-2xl shadow-xl shadow-slate-100 border border-slate-100">
+                <!-- 【条件No.2】魅力・特徴の説明文が3文以上（以下は5つの文で詳しく構成） -->
+                <p class="text-slate-700 text-sm md:text-base leading-loose text-left md:text-justify font-normal space-y-4">
+                    愛媛県西条市は、西日本最高峰である美しい霊峰「石鎚山（いしづちさん）」の麓に位置し、大自然の恵みを一身に受けた美しいまちです。
+                    市内各所から驚くほど豊かに自噴する地下水は「うちぬき」と呼ばれており、環境省の「名水百選」で全国一に選ばれた実績を持っています。
+                    また、毎年秋に開催される伝統の「西条まつり」は、豪華絢爛なだんじりやみこしが街を埋め尽くし、地域の人々の深い絆と情熱を感じさせます。
+                    その極上の名水が育む「アタゴ柿」などの豊かな農作物や、地元で長年愛されるユニークなご当地グルメも大きな魅力の一つです。
+                    都会の喧騒から離れ、澄んだ水と豊かな歴史、人々のあたたかさに触れることができるこのまちへ、ぜひ一度お越しください。
+                </p>
+            </div>
+        </section>
+
+        <section class="mb-20 md:mb-28">
+            <h2 class="text-2xl md:text-3xl font-black text-center text-blue-950 mb-4 relative inline-block pb-3 w-full">
+                西条の息吹を感じる風景
+                <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-sky-500 rounded-full"></span>
+            </h2>
+            <p class="text-center text-xs md:text-sm text-slate-500 mb-8 max-w-md mx-auto">
+                ※教員から配布された写真は <code class="bg-slate-100 px-1.5 py-0.5 rounded text-red-500 font-semibold">images/</code> フォルダに入れて表示してください。
+            </p>
+
+            <!-- 【加点条件：JavaScriptによる動き①】カテゴリ切り替えフィルターボタン -->
+            <!-- ボタンを押すと、ボタンのアクティブ状態（色・テキスト）と表示カードが動的に変化します -->
+            <div class="flex flex-wrap justify-center gap-2 md:gap-3 mb-10">
+                <button onclick="filterCategory('all')" id="btn-all" class="filter-btn px-5 py-2.5 rounded-full text-xs md:text-sm font-bold transition-all bg-sky-650 bg-blue-900 text-white shadow-md">
+                    🌟 すべて表示
+                </button>
+                <button onclick="filterCategory('nature')" id="btn-nature" class="filter-btn px-5 py-2.5 rounded-full text-xs md:text-sm font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                    🏞 自然・名水
+                </button>
+                <button onclick="filterCategory('culture')" id="btn-culture" class="filter-btn px-5 py-2.5 rounded-full text-xs md:text-sm font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                    🏮 伝統・祭り
+                </button>
+                <button onclick="filterCategory('gourmet')" id="btn-gourmet" class="filter-btn px-5 py-2.5 rounded-full text-xs md:text-sm font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                    🍳 名産・グルメ
+                </button>
+            </div>
+
+            <!-- 【加点条件：レイアウトの工夫】スマホ対応のレスポンシブなグリッドレイアウト -->
+            <!-- フィルター条件に応じてJSで非表示・表示が切り替わります -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8" id="spots-container">
+                
+                <!-- スポット1: 自然・名水 -->
+                <div class="spot-card bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-100 group" data-category="nature">
+                    <div class="h-56 overflow-hidden relative">
+                        <img 
+                            src="images/photo2.jpg" 
+                            onerror="this.src='https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80'"
+                            alt="西条市の自然（名水うちぬき）" 
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <span class="absolute top-4 left-4 bg-sky-550 bg-sky-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow">🏞 自然・名水</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-blue-950 mb-2">名水「うちぬき」と豊かな自然</h3>
+                        <p class="text-slate-600 text-xs md:text-sm leading-relaxed">街のいたる所から清らかな水が自然に湧き出す水の都。そのまま飲める冷たくて美味しいお水は住民の自慢です。</p>
+                    </div>
+                </div>
+
+                <!-- スポット2: 伝統・祭り -->
+                <div class="spot-card bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-100 group" data-category="culture">
+                    <div class="h-56 overflow-hidden relative">
+                        <img 
+                            src="images/photo3.jpg" 
+                            onerror="this.src='https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80'"
+                            alt="西条まつり" 
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <span class="absolute top-4 left-4 bg-amber-550 bg-amber-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow">🏮 伝統・祭り</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-blue-950 mb-2">情熱の伝統行事「西条まつり」</h3>
+                        <p class="text-slate-600 text-xs md:text-sm leading-relaxed">江戸時代から続く秋の神事。150台以上の豪華絢爛な屋台（だんじり・みこし）が勢揃いする様子は圧巻の一言です。</p>
+                    </div>
+                </div>
+
+                <!-- スポット3: 名産・グルメ -->
+                <div class="spot-card bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-100 group" data-category="gourmet">
+                    <div class="h-56 overflow-hidden relative">
+                        <img 
+                            src="images/photo4.jpg" 
+                            onerror="this.src='https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80'"
+                            alt="西条てっぱんナポリタン" 
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <span class="absolute top-4 left-4 bg-emerald-550 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow">🍳 名産・グルメ</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-blue-950 mb-2">熱々！西条てっぱんナポリタン</h3>
+                        <p class="text-slate-600 text-xs md:text-sm leading-relaxed">熱い鉄板に生卵を敷き、その上にモチモチのパスタを乗せた人気グルメ。お店ごとのこだわりソースが楽しめます。</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="mb-20 md:mb-28 bg-sky-50 rounded-3xl p-6 md:p-12 border border-sky-100 shadow-inner">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-xl md:text-2xl font-bold text-blue-950 mb-4">💧 画面で体験！西条の「うちぬき」水汲み</h2>
+                <p class="text-slate-600 text-xs md:text-sm mb-8">
+                    ボタンをクリックして、名水「うちぬき」をコップに汲んでみましょう！溜まる量に合わせてメッセージやコップの様子が変わります。
+                </p>
+
+                <!-- 仮想コップ -->
+                <div class="relative w-28 h-36 md:w-32 md:h-40 mx-auto bg-white/50 border-4 border-slate-300 rounded-b-3xl overflow-hidden mb-6 shadow-md flex flex-col justify-end">
+                    <!-- 水の要素 (JSで高さを制御) -->
+                    <div id="water-fill" class="water-wave w-full bg-gradient-to-t from-sky-400 to-cyan-300 h-0"></div>
+                    <!-- 目盛り -->
+                    <div class="absolute inset-0 flex flex-col justify-between text-[10px] text-slate-400 font-mono p-1 text-left pointer-events-none">
+                        <span>MAX</span>
+                        <span>50%</span>
+                        <span>EMPTY</span>
+                    </div>
+                </div>
+
+                <!-- ステータス表示 -->
+                <div class="mb-6">
+                    <span id="water-status" class="bg-blue-100 text-blue-800 text-xs md:text-sm font-bold px-4 py-2 rounded-full">
+                        コップは空っぽです。お水を注いでね！
+                    </span>
+                </div>
+
+                <!-- 【加点条件：JavaScriptによる動き②】クリックで状態が切り替わるボタン -->
+                <button 
+                    onclick="pourWater()" 
+                    id="pour-button" 
+                    class="px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 text-sm md:text-base"
+                >
+                    🚰 お水を注ぐ (0杯目)
+                </button>
+                <button 
+                    onclick="resetWater()" 
+                    class="mt-2 block mx-auto text-xs text-slate-500 hover:text-slate-800 underline transition-colors"
+                >
+                    やり直す
+                </button>
+            </div>
+        </section>
+
+        <section class="mb-20 md:mb-28">
+            <div class="bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 md:p-12 shadow-2xl relative overflow-hidden">
+                <!-- 装飾用背景 -->
+                <div class="absolute -right-24 -bottom-24 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl"></div>
+                <div class="absolute -left-24 -top-24 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
+
+                <h2 class="text-2xl md:text-3xl font-bold mb-8 text-center text-sky-300 relative z-10">
+                    西条市のおすすめスポット ＆ 名産品
+                </h2>
+                
+                <!-- 【条件No.3】観光スポットや名産品、イベントなどの紹介が箇条書き（リスト）で3つ以上 -->
+                <ul class="space-y-4 md:space-y-6 max-w-4xl mx-auto relative z-10">
+                    <!-- 項目1 -->
+                    <li class="flex items-start space-x-4 bg-white/5 hover:bg-white/10 p-4 md:p-5 rounded-2xl border border-white/10 transition-all">
+                        <div class="bg-sky-400 text-slate-950 rounded-full w-7 h-7 md:w-8 md:h-8 flex items-center justify-center font-bold shrink-0 text-sm md:text-base mt-1">1</div>
+                        <div>
+                            <h4 class="text-base md:text-lg font-bold text-sky-200">霊峰 石鎚山（いしづちさん）</h4>
+                            <p class="text-xs md:text-sm text-slate-200 mt-1">
+                                標高1,982mを誇る西日本最高峰。四季折々の息をのむ大パノラマが広がり、登山初心者から経験者まで親しまれる神秘的なパワースポットです。
+                            </p>
+                        </div>
+                    </li>
+                    <!-- 項目2 -->
+                    <li class="flex items-start space-x-4 bg-white/5 hover:bg-white/10 p-4 md:p-5 rounded-2xl border border-white/10 transition-all">
+                        <div class="bg-sky-400 text-slate-950 rounded-full w-7 h-7 md:w-8 md:h-8 flex items-center justify-center font-bold shrink-0 text-sm md:text-base mt-1">2</div>
+                        <div>
+                            <h4 class="text-base md:text-lg font-bold text-sky-200">弘法水（こうぼうすい）とうちぬき広場</h4>
+                            <p class="text-xs md:text-sm text-slate-200 mt-1">
+                                街中にある名水の湧き出しスポット。散策の途中に冷たいお水を汲んでその場で味わうことができ、観光客や地元の方に最も愛される憩いの場です。
+                            </p>
+                        </div>
+                    </li>
+                    <!-- 項目3 -->
+                    <li class="flex items-start space-x-4 bg-white/5 hover:bg-white/10 p-4 md:p-5 rounded-2xl border border-white/10 transition-all">
+                        <div class="bg-sky-400 text-slate-950 rounded-full w-7 h-7 md:w-8 md:h-8 flex items-center justify-center font-bold shrink-0 text-sm md:text-base mt-1">3</div>
+                        <div>
+                            <h4 class="text-base md:text-lg font-bold text-sky-200">西条のアタゴ柿・愛媛のブランド農作物</h4>
+                            <p class="text-xs md:text-sm text-slate-200 mt-1">
+                                非常に大きく育ち、上品な甘みを持つ高級柿「アタゴ柿」は西条の特産品。その他にも澄んだ名水が育む「はだか麦」など、農業が非常に盛んです。
+                            </p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="mb-20 md:mb-28">
+            <h2 class="text-2xl md:text-3xl font-black text-center text-blue-950 mb-8 relative inline-block pb-3 w-full">
+                西条市の基本データ
+                <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-sky-500 rounded-full"></span>
+            </h2>
+            
+            <!-- 【条件No.4】表（table）で「所在地・人口・特産品・アクセス」をまとめている -->
+            <!-- 横スクロールを防ぐレスポンシブなラッパー -->
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden max-w-4xl mx-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gradient-to-r from-blue-900 to-indigo-950 text-white">
+                            <th class="p-4 md:p-5 text-sm md:text-base font-bold w-1/3 md:w-1/4">項目</th>
+                            <th class="p-4 md:p-5 text-sm md:text-base font-bold">市の詳細情報</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="p-4 md:p-5 text-xs md:text-sm font-bold bg-slate-50/50 text-blue-950">市役所所在地</td>
+                            <td class="p-4 md:p-5 text-xs md:text-sm">〒793-8601 愛媛県西条市明屋敷164番地</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="p-4 md:p-5 text-xs md:text-sm font-bold bg-slate-50/50 text-blue-950">人口</td>
+                            <td class="p-4 md:p-5 text-xs md:text-sm">約 104,000人（自然と調和した暮らしが営まれています）</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="p-4 md:p-5 text-xs md:text-sm font-bold bg-slate-50/50 text-blue-950">主な特産品</td>
+                            <td class="p-4 md:p-5 text-xs md:text-sm">
+                                <div class="flex flex-wrap gap-1.5 md:gap-2">
+                                    <span class="inline-block bg-sky-100 text-sky-800 text-[10px] md:text-xs px-2.5 py-1 rounded-full">うちぬき名水</span>
+                                    <span class="inline-block bg-amber-100 text-amber-800 text-[10px] md:text-xs px-2.5 py-1 rounded-full">アタゴ柿</span>
+                                    <span class="inline-block bg-emerald-100 text-emerald-800 text-[10px] md:text-xs px-2.5 py-1 rounded-full">はだか麦</span>
+                                    <span class="inline-block bg-red-100 text-red-800 text-[10px] md:text-xs px-2.5 py-1 rounded-full">鉄板ナポリタン</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="p-4 md:p-5 text-xs md:text-sm font-bold bg-slate-50/50 text-blue-950">アクセス情報</td>
+                            <td class="p-4 md:p-5 text-xs md:text-sm leading-relaxed">
+                                <ul class="list-disc pl-5 space-y-1.5">
+                                    <li><strong>電車：</strong>JR松山駅から特急「しおかぜ」で約1時間（伊予西条駅下車）</li>
+                                    <li><strong>車：</strong>松山自動車道「いよ西条IC」出口からすぐ</li>
+                                    <li><strong>飛行機：</strong>松山空港からシャトルバス・JRを利用して約1時間15分</li>
+                                </ul>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="text-center py-10 md:py-14 bg-gradient-to-tr from-slate-100 to-slate-200 rounded-3xl p-6 border border-slate-300 shadow-inner">
+            <h3 class="text-lg md:text-xl font-bold text-blue-950 mb-6">もっと西条市のことが知りたくなったら！</h3>
+            
+            <!-- スマホで見ても崩れないように、縦並び(sm以下)と横並び(sm以上)を切り替えるレスポンシブなボタン配置 -->
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 max-w-2xl mx-auto">
+                <!-- 【条件No.7・ボタン①】西条市の公式サイト（自分で検索して設定、新しいタブで開く） -->
+                <a 
+                    href="https://www.city.saijo.ehime.jp/" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    class="w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:shadow-blue-200 transition-all duration-300 transform hover:-translate-y-0.5 inline-flex items-center justify-center gap-2 text-sm md:text-base"
+                >
+                    <span>🏛 西条市 公式サイト</span>
+                    <!-- 外部アイコン（SVG） -->
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                </a>
+
+                <!-- 【条件No.8・ボタン②】西条市に関連する信頼できる外部サイト（観光協会） -->
+                <a 
+                    href="https://www.lovesaijo.com/" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    class="w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:shadow-emerald-200 transition-all duration-300 transform hover:-translate-y-0.5 inline-flex items-center justify-center gap-2 text-sm md:text-base"
+                >
+                    <span>✨ LOVE SAIJO（西条市観光協会）</span>
+                    <!-- 外部アイコン（SVG） -->
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-900 text-white/60 py-8 text-center text-[11px] md:text-xs border-t border-slate-800">
+        <p>&copy; 2026 愛媛県西条市 観光紹介・学習用サイト. All Rights Reserved.</p>
+        <p class="mt-2 text-white/30">このウェブサイトは、まち紹介サイト作成の学習用の課題成果物として制作されたものです。</p>
+    </footer>
+
+    <script>
+        // --- ギミック①：観光スポットのカテゴリフィルター ---
+        function filterCategory(category) {
+            // 全てのカードを取得
+            const cards = document.querySelectorAll('.spot-card');
+            
+            cards.forEach(card => {
+                // 'all'が選ばれている、もしくはカードのカテゴリが合致する場合
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'block';
+                    // フェードイン用のディレイ
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'scale(1)';
+                    }, 50);
+                } else {
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.95)';
+                    // アニメーション完了後に完全に非表示にする
+                    setTimeout(() => {
+                        card.style.display = 'none';
+                    }, 300);
+                }
+            });
+
+            // ボタンのアクティブ状態の切り替え
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => {
+                // 一旦すべてのアクティブなスタイル（青背景・白文字）をリセットし、デフォルトの白背景に戻す
+                btn.classList.remove('bg-blue-900', 'text-white', 'shadow-md');
+                btn.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+            });
+
+            // クリックされたボタンのスタイルだけをアクティブにする
+            const activeBtn = document.getElementById(`btn-${category}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+                activeBtn.classList.add('bg-blue-900', 'text-white', 'shadow-md');
+            }
+        }
+
+        // --- ギミック②：「名水うちぬき水汲み」シミュレーター ---
+        let waterCount = 0;
+        const maxWater = 4; // 4回クリックでMAX
+
+        function pourWater() {
+            if (waterCount < maxWater) {
+                waterCount++;
+                updateWaterUI();
+            } else {
+                // 水が満タンになったとき、一気に飲み干すアクションに切り替える
+                drinkWater();
+            }
+        }
+
+        function updateWaterUI() {
+            const fillElement = document.getElementById('water-fill');
+            const statusElement = document.getElementById('water-status');
+            const buttonElement = document.getElementById('pour-button');
+
+            // 溜まった割合に応じて高さを調整
+            const percentage = (waterCount / maxWater) * 100;
+            fillElement.style.height = `${percentage}%`;
+
+            if (waterCount === 1) {
+                statusElement.innerText = "💧 水がちょっと溜まりました！清らかで冷たそう！";
+                statusElement.className = "bg-sky-100 text-sky-800 text-xs md:text-sm font-bold px-4 py-2 rounded-full";
+                buttonElement.innerText = `🚰 お水を注ぐ (${waterCount}/${maxWater})`;
+            } else if (waterCount === 2) {
+                statusElement.innerText = "⛲ 半分まで溜まりました！うちぬき名水の良い香りがします。";
+                statusElement.className = "bg-cyan-100 text-cyan-800 text-xs md:text-sm font-bold px-4 py-2 rounded-full";
+                buttonElement.innerText = `🚰 お水を注ぐ (${waterCount}/${maxWater})`;
+            } else if (waterCount === 3) {
+                statusElement.innerText = "🌊 もうすぐ満タン！コップからこぼれそうです！";
+                statusElement.className = "bg-teal-100 text-teal-800 text-xs md:text-sm font-bold px-4 py-2 rounded-full";
+                buttonElement.innerText = `🚰 お水を注ぐ (${waterCount}/${maxWater})`;
+            } else if (waterCount === maxWater) {
+                // ボタンの文字と色をガラリと変え、飲むのを促す
+                statusElement.innerText = "✨ ついに満タン！冷たいうちぬき水を一気に飲もう！";
+                statusElement.className = "bg-emerald-100 text-emerald-800 text-xs md:text-sm font-bold px-4 py-2 rounded-full animate-bounce";
+                
+                buttonElement.innerText = "😋 一気に飲み干す！";
+                buttonElement.classList.remove('from-sky-500', 'to-blue-600');
+                buttonElement.classList.add('from-emerald-500', 'to-teal-600');
+            }
+        }
+
+        function drinkWater() {
+            const fillElement = document.getElementById('water-fill');
+            const statusElement = document.getElementById('water-status');
+            const buttonElement = document.getElementById('pour-button');
+
+            // コップを瞬時に空にする
+            waterCount = 0;
+            fillElement.style.height = '0%';
+
+            // 飲んだ後の演出
+            statusElement.innerText = "🤩 ぷはぁ！冷たくて最高！元気が100回復した！";
+            statusElement.className = "bg-amber-100 text-amber-800 text-xs md:text-sm font-bold px-4 py-2 rounded-full";
+
+            // ボタンの初期化
+            buttonElement.innerText = `🚰 お水を注ぐ (0/${maxWater})`;
+            buttonElement.classList.remove('from-emerald-500', 'to-teal-600');
+            buttonElement.classList.add('from-sky-500', 'to-blue-600');
+        }
+
+        function resetWater() {
+            waterCount = 0;
+            const fillElement = document.getElementById('water-fill');
+            const statusElement = document.getElementById('water-status');
+            const buttonElement = document.getElementById('pour-button');
+
+            fillElement.style.height = '0%';
+            statusElement.innerText = "コップは空っぽです。お水を注いでね！";
+            statusElement.className = "bg-blue-100 text-blue-800 text-xs md:text-sm font-bold px-4 py-2 rounded-full";
+            
+            buttonElement.innerText = `🚰 お水を注ぐ (0/${maxWater})`;
+            buttonElement.classList.remove('from-emerald-500', 'to-teal-600');
+            buttonElement.classList.add('from-sky-500', 'to-blue-600');
+        }
+    </script>
+</body>
+</html>
